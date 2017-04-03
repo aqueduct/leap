@@ -1,0 +1,40 @@
+<html>
+<head>
+<script src="seen.min.js"></script>
+</head>
+<body>
+
+<svg width="900" height="500" id="seen-svg"></svg>
+
+<script type="text/javascript" id="code">
+width = 900;
+height = 500;
+shapes = [0].map(function(i) {
+	shape="";
+	shape = seen.Shapes.pipe(seen.P(-1, -1, -1), seen.P(1, 1, 1), 0.2).scale(100);
+	seen.Colors.randomSurfaces2(shape);
+	return shape;
+
+});
+scenes = shapes.map(function(shape) {
+	return new seen.Scene({
+		fractionalPoints: true,
+		model: seen.Models["default"]().add(shape),
+		viewport: seen.Viewports.center(width, height)
+	});
+});
+
+contexts = [seen.Context("seen-svg", scenes[0]).render()];
+
+
+
+
+var anim = new seen.Animator().onFrame(function(t, dt) {
+	shapes[0].rotx(dt * 3e-4);
+	contexts[0].render();
+})//.start()
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<html>
+<head>
+<title>Leap Motion JavaScript Example</title>
+<style>
+.left,.right,.bone,.tip{
+	position: fixed;
+	left: 50%;
+	bottom: 0;
+}
+.hand{
+	height: 150px;
+	width: 150px;
+	display: none;
+}
+.bone{
+	position: fixed;
+	left: 50%;
+	bottom: 0;
+	transform-style: preserve-3d;
+}
+.dim1,.dim2,.dim3{
+	border-radius: 100px;
+	position: absolute;
+	height: 100%;
+	width:100%;
+	top: 0;
+	left: 0;
+}
+.dim2{
+	transform: rotateY(90deg);
+}
+.dim3{
+	transform: rotateX(90deg);
+}
+.Metacarpal .dim3{top: 33%}
+.Proximal .dim3{top: 26%}
+.Intermediate .dim3{top: 18%}
+.Distal .dim3{top: 0%}
+
+.tip{
+	height: 10px;
+	width: 10px;
+	border-radius: 25px;
+	background: purple;
+	z-index: 1000;
+}
+.leap{
+	display: block;
+	background: black;
+	color: white;
+	width: 100px;
+	height: 20px;
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	transform: translate(-50%, 0);
+	text-align: center;
+}
+.Metacarpal.bone *{background: red}
+.Proximal.bone *{background: orange}
+.Intermediate.bone *{background: blue}
+.Distal.bone *{background: green}
+
+.Thumb.Metacarpal.bone{
+	display: none !important;
+}
+
+</style>
+<script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
+<script>
+var previousFrame = null;
+var paused = false;
+var controllerOptions = {};
+var fingerTypeMap = ["Thumb", "Index", "Middle", "Ring", "Pinky"];
+var boneTypeMap = ["Metacarpal", "Proximal", "Intermediate", "Distal"];
+
+Leap.loop(controllerOptions, function(frame) {
+	if (paused) {
+		return;
+	}
+	if (frame.hands.length > 0) {
+		console.log(frame);
+		if(frame.hands[0].type=="left" || frame.hands[1] && frame.hands[1].type=="left"){
+			document.querySelectorAll(".left").forEach(function(bone){bone.style.display="block"});
+		}
+		else{
+			document.querySelectorAll(".left").forEach(function(bone){bone.style.display="none"});
+		}
+		if(frame.hands[0].type=="right" || frame.hands[1] && frame.hands[1].type=="right"){
+			document.querySelectorAll(".right").forEach(function(bone){bone.style.display="block"});
+		}
+		else{
+			document.querySelectorAll(".right").forEach(function(bone){bone.style.display="none"});
+		}
+		for (var x = 0; x < frame.hands.length; x++) {
+			var hand = frame.hands[x];
+			for (var y = 0; y < hand.fingers.length; y++){
+				var finger = hand.fingers[y];
+				for (var z = 0; z < finger.bones.length; z++){
+					var bone = finger.bones[z];
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone").style.height=bone.length;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone").style.width=bone.width;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim1").style.height=bone.length;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim1").style.width=bone.width;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim2").style.height=bone.length;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim2").style.width=bone.width;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim3").style.height=bone.width;
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone .dim3").style.width=bone.width;
+					
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone").style.zIndex=Math.round(bone.center()[2]);
+					
+					var bt3d=" translate3d("+bone.center()[0]+"px,-"+bone.center()[1]+"px,"+bone.center()[2]+"px)";
+					var br3d=" rotateX("+(bone.direction()[1]*-90+90)+"deg) rotateZ("+bone.direction()[0]*90+"deg)";
+					
+					document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+"."+boneTypeMap[bone.type]+".bone").style.transform="translate(-50%, 50%) perspective(1000px)"+bt3d+br3d;
+					
+				}
+				document.querySelector("."+hand.type+"."+fingerTypeMap[finger.type]+".tip").style.transform="translate(-50%, 50%) perspective(1000px) translate3d("+finger.tipPosition[0]+"px,-"+finger.tipPosition[1]+"px,"+finger.tipPosition[2]+"px)";;
+			}
+		}
+	}
+	else {
+		document.querySelectorAll(".left").forEach(function(bone){bone.style.display="none"});
+		document.querySelectorAll(".right").forEach(function(bone){bone.style.display="none"});
+	}
+	// Store frame for motion functions
+	previousFrame = frame;
+})
+function togglePause() {
+	paused = !paused;
+
+	if (paused) {
+		document.getElementById("pause").innerText = "Resume";
+	}
+	else {
+		document.getElementById("pause").innerText = "Pause";
+	}
+}
+</script>
+</head>
+<body>
+	<div class="left hand"></div>
+	<div class="left Thumb Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Thumb Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Thumb Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Thumb Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Thumb tip"></div>
+	<div class="left Index Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Index Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Index Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Index Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Index tip"></div>
+	<div class="left Middle Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Middle Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Middle Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Middle Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Middle tip"></div>
+	<div class="left Ring Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Ring Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Ring Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Ring Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Ring tip"></div>
+	<div class="left Pinky Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Pinky Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Pinky Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Pinky Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="left Pinky tip"></div>
+	<div class="right hand"></div>
+	<div class="right Thumb Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Thumb Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Thumb Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Thumb Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Thumb tip"></div>
+	<div class="right Index Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Index Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Index Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Index Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Index tip"></div>
+	<div class="right Middle Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Middle Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Middle Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Middle Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Middle tip"></div>
+	<div class="right Ring Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Ring Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Ring Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Ring Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Ring tip"></div>
+	<div class="right Pinky Metacarpal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Pinky Proximal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Pinky Intermediate bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Pinky Distal bone"><div class="dim1"></div><div class="dim2"></div><div class="dim3"></div></div>
+	<div class="right Pinky tip"></div>
+	<div class="leap">LEAP</div>
+	<h1>Leap Motion JavaScript Example</h1>
+	<div id="main">
+		<button id="pause" onclick="togglePause()">Pause</button>
+	</div>
+</body>
+</html>

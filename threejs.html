@@ -1,0 +1,52 @@
+<body>
+<script src="three.js-master/build/Three.js"></script>
+<script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
+<script>
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+
+var geometry = new THREE.CylinderGeometry( 1, 1, 2, 6);//(radiusTop, radiusBottom, height, radiusSegments)
+var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+var cylinder = new THREE.Mesh( geometry, material );
+scene.add( cylinder );
+
+camera.position.z = 5;
+
+function render() {
+	requestAnimationFrame( render );
+	renderer.render( scene, camera );
+}
+render();
+
+var previousFrame = null;
+var paused = false;
+var controllerOptions = {};
+Leap.loop({}, function(frame) {
+	if (paused) {
+		return;
+	}
+	if (frame.hands.length > 0) {
+		if(frame.hands[0].fingers[1].bones[1].direction()){
+			console.log(frame.hands[0].fingers[1].bones[1].direction()[1]*Math.PI/2+Math.PI/2)
+			cylinder.rotation.x=frame.hands[0].fingers[1].bones[1].direction()[1]*Math.PI/2-Math.PI/2;
+			cylinder.rotation.z=frame.hands[0].fingers[1].bones[1].direction()[0]*-Math.PI/2;
+		}
+	}
+})
+function togglePause() {
+	paused = !paused;
+
+	if (paused) {
+		document.getElementById("pause").innerText = "Resume";
+	}
+	else {
+		document.getElementById("pause").innerText = "Pause";
+	}
+}
+</script>
+https://threejs.org/docs/index.html#Reference/Geometries/CylinderGeometry
+</body>
