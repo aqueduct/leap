@@ -1,6 +1,7 @@
 <html>
 <head>
 <script src="seen.min.js"></script>
+<script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
 </head>
 <body>
 
@@ -10,8 +11,7 @@
 width = 900;
 height = 500;
 shapes = [0].map(function(i) {
-	shape="";
-	shape = seen.Shapes.pipe(seen.P(-1, -1, -1), seen.P(1, 1, 1), 0.2).scale(100);
+	shape = seen.Shapes.pipe(seen.P(-0.1, -0.1, -0.1), seen.P(0.1, 0.1, 0.1), 0.2).scale(100);
 	seen.Colors.randomSurfaces2(shape);
 	return shape;
 
@@ -25,15 +25,49 @@ scenes = shapes.map(function(shape) {
 });
 
 contexts = [seen.Context("seen-svg", scenes[0]).render()];
+shape.rotx(Math.PI/4);contexts[0].render();
+shape.roty(-Math.PI/4);contexts[0].render();
+shape.bake();
 
-
-
-
+/*
 var anim = new seen.Animator().onFrame(function(t, dt) {
 	shapes[0].rotx(dt * 3e-4);
 	contexts[0].render();
 })//.start()
+*/
 
+
+
+var previousFrame = null;
+var paused = false;
+var controllerOptions = {};
+Leap.loop({}, function(frame) {
+	if (paused) {
+		return;
+	}
+	if (frame.hands.length > 0) {
+		shape.reset();
+		shape.translate(frame.hands[0].fingers[1].bones[1].center()[0],frame.hands[0].fingers[1].bones[1].center()[1],frame.hands[0].fingers[1].bones[1].center()[2]);
+		//shape.scale(frame.hands[0].fingers[1].bones[1].width,frame.hands[0].fingers[1].bones[1].width,frame.hands[0].fingers[1].bones[1].length);
+		shape.rotx(frame.hands[0].fingers[1].bones[1].direction()[1]);
+		shape.roty(-frame.hands[0].fingers[1].bones[1].direction()[0]);
+		contexts[0].render()
+	
+	
+	
+	
+	}
+})
+function togglePause() {
+	paused = !paused;
+
+	if (paused) {
+		document.getElementById("pause").innerText = "Resume";
+	}
+	else {
+		document.getElementById("pause").innerText = "Pause";
+	}
+}
 </script>
 
 </body>

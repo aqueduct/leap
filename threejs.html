@@ -3,17 +3,24 @@
 <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
 <script>
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+var camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setClearAlpha( 0 )
 document.body.appendChild( renderer.domElement );
 
-var geometry = new THREE.CylinderGeometry( 1, 1, 2, 6);//(radiusTop, radiusBottom, height, radiusSegments)
+var geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 6);//(radiusTop, radiusBottom, height, radiusSegments)
 var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-var cylinder = new THREE.Mesh( geometry, material );
-scene.add( cylinder );
+var material2 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 
+
+/*
+bones.hands[0].fingers[0].bones[0] = new THREE.Mesh( geometry, material );
+bones.hands[0].fingers[0].bones[1] = new THREE.Mesh( geometry, material2 );
+scene.add( bones.hands[0].fingers[0].bones[0] );
+scene.add( bones.hands[0].fingers[0].bones[1] );
+*/
 camera.position.z = 5;
 
 function render() {
@@ -21,6 +28,8 @@ function render() {
 	renderer.render( scene, camera );
 }
 render();
+
+
 
 var previousFrame = null;
 var paused = false;
@@ -31,9 +40,30 @@ Leap.loop({}, function(frame) {
 	}
 	if (frame.hands.length > 0) {
 		if(frame.hands[0].fingers[1].bones[1].direction()){
-			console.log(frame.hands[0].fingers[1].bones[1].direction()[1]*Math.PI/2+Math.PI/2)
-			cylinder.rotation.x=frame.hands[0].fingers[1].bones[1].direction()[1]*Math.PI/2-Math.PI/2;
-			cylinder.rotation.z=frame.hands[0].fingers[1].bones[1].direction()[0]*-Math.PI/2;
+		cylinders={hands:[]};
+			for(var x=0; x<frame.hands.length; x++){
+			cylinders.hands[x]={fingers:[]};
+				for(var y=0; y<frame.hands[x].fingers.length; y++){
+				cylinders.hands[x].fingers[y]={bones:[]};
+					for(var z=0; z<frame.hands[x].fingers[y].bones.length; z++){
+						cylinders.hands[x].fingers[y].bones[z] = new THREE.Mesh( geometry, material );
+						scene.add( cylinders.hands[x].fingers[y].bones[z] );
+						bone = cylinders.hands[x].fingers[y].bones[z]
+						
+						bone.rotation.x=frame.hands[x].fingers[y].bones[z].direction()[1]*Math.PI/2-Math.PI/2;
+						bone.rotation.z=frame.hands[x].fingers[y].bones[z].direction()[0]*-Math.PI/2;
+						
+						bone.scale.set(frame.hands[x].fingers[y].bones[z].width,frame.hands[x].fingers[y].bones[z].length,frame.hands[x].fingers[y].bones[z].width);
+						
+						fx=frame.hands[x].fingers[y].bones[z].center()[0]-frame.hands[x].palmPosition[0]
+						fy=frame.hands[x].fingers[y].bones[z].center()[1]-frame.hands[x].palmPosition[1]
+						fz=frame.hands[x].fingers[y].bones[z].center()[2]+frame.hands[x].palmPosition[2]
+						
+						bone.position.set(fx,fy,fz);
+						
+					}
+				}
+			}
 		}
 	}
 })
